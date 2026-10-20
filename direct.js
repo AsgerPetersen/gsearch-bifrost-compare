@@ -26,10 +26,46 @@ const DTYPES = [
 ];
 const DTYPE_BY_KEY = Object.fromEntries(DTYPES.map((t) => [t.key, t]));
 
+// Presets: q = search text, t = types (omitted = all), k = kommunekoder, n = max per type (omitted = unchanged).
 const CASES = [
-  "skodsb", "skodsborgvej 414", "nøddebogade 1 st th", "nørrebrog 1", "rådhuspl", "rådhuspladsen",
-  "vendsyssel", "skodsborg", "3kg søll", "3kg", "80", "aar", "køb", "vor frue", "1an gentofte",
-];
+  { q: "skodsb" },
+  { q: "skodsborgvej 414", t: ["adresse", "husnummer", "navngivenvej"] },
+  { q: "nøddebogade 1 st th", t: ["adresse", "husnummer"] },
+  { q: "nørrebrog 1", t: ["adresse", "husnummer", "navngivenvej"] },
+  { q: "vestergade 1", t: ["adresse", "husnummer"], k: "101" },
+  { q: "rådhuspl" },
+  { q: "rådhuspladsen", t: ["stednavn", "navngivenvej"] },
+  { q: "vendsyssel", t: ["stednavn"] },
+  { q: "skodsborg", t: ["stednavn", "by", "postnummer"] },
+  { q: "vor frue", t: ["stednavn", "sogn"], k: "101,851" },
+  { q: "3kg søll", t: ["matrikel"] },
+  { q: "3kg", t: ["matrikel"] },
+  { q: "1a", t: ["matrikel"], k: "615" },
+  { q: "1an gentofte", t: ["matrikel_udgaaet"] },
+  { q: "80", t: ["postnummer", "by"] },
+  { q: "aar", t: ["postnummer", "by", "kommune", "sogn", "opstillingskreds"] },
+  { q: "køb", t: ["kommune", "postnummer", "by"] },
+  { q: "lyngby", t: ["by", "postnummer", "sogn", "retskreds", "politikreds", "opstillingskreds"], k: "230,173" },
+].map(describeCase);
+
+function describeCase(c) {
+  const titles = (c.t || []).map((k) => DTYPE_BY_KEY[k].title);
+  const hint = [titles.length === 1 ? titles[0] : titles.length ? `${titles.length} typer` : "", c.k && `kommune ${c.k}`]
+    .filter(Boolean)
+    .join(" · ");
+  const title = [`Typer: ${titles.length ? titles.join(", ") : "alle"}`, c.k && `Kommunekoder: ${c.k}`, c.n && `Maks.: ${c.n}`]
+    .filter(Boolean)
+    .join("\n");
+  return { ...c, hint, title };
+}
+
+function applyCase(c) {
+  const keys = c.t || DTYPES.map((t) => t.key);
+  document.querySelectorAll("#types input").forEach((i) => (i.checked = keys.includes(i.value)));
+  setKommuner(c.k);
+  if (c.n) $("limit").value = c.n;
+  scheduleSearch(0);
+}
 
 // ---------- type selection & URL state ----------
 function initTypes(selected) {
@@ -136,13 +172,17 @@ function runSearch() {
       ]);
       if (!pred) return { matches: d.matches, meta: "" };
       const kept = d.matches.filter(pred);
-      return { matches: kept.slice(0, limit), meta: ` · ${kept.length} af ${d.matches.length} i kommune${codes.length > 1 ? "rne" : "n"}` };
+      const dropped = d.matches.filter((m) => !pred(m));
+      const where = `kommune${codes.length > 1 ? "rne" : "n"}`;
+      return { matches: kept.slice(0, limit), all: d.matches, dropped, fetched: d.matches.length, where, meta: ` · ${kept.length} af ${d.matches.length} i ${where}` };
     };
     timed(job().catch((e) => ({ error: e.message }))).then(([d, ms]) => {
       if (my !== seq) return;
       if (d.error) return s.fill("bf", [makeNote(d.error, "error")], `${ms} ms`);
       const items = d.matches.map((m) => makeItem("bf", { ep: "search", row: m, text: m.result }, bfDirectTags(m)));
-      s.fill("bf", items.length ? items : [makeNote("Ingen resultater", "na")], `${d.matches.length} · ${ms} ms${d.meta}`);
+      if (!items.length) items.push(makeNote("Ingen resultater", "na"));
+      if (d.dropped && d.matches.length < limit && d.dropped.length) items.push(...droppedItems(d));
+      s.fill("bf", items, `${d.matches.length} · ${ms} ms${d.meta}`);
       tally("bf", d.matches.length, ms);
     });
   });
@@ -165,6 +205,26 @@ function runSearch() {
       });
     });
   }
+}
+
+const DROPPED_SHOWN = 5;
+
+// Shows what the browser-side kommune filter removed: Bifrost ranks before filtering, GSearch after.
+function droppedItems(d) {
+  const note = makeNote(
+    `Bifrost kan ikke filtrere på serveren. Kun ${d.fetched - d.dropped.length} af de ${d.fetched} bedste hits ligger i ${d.where}; ` +
+      `${d.dropped.length} er filtreret fra i browseren, fx:`,
+    "na dropnote"
+  );
+  const shown = d.dropped.slice(0, DROPPED_SHOWN).map((m) => {
+    const li = makeItem("bf", { ep: "search", row: m, text: m.result }, ["uden for filteret", ...bfDirectTags(m)]);
+    li.classList.add("dropped");
+    li.value = d.all.indexOf(m) + 1; // Bifrost's own rank among the fetched hits
+    li.title = `Nr. ${li.value} i Bifrosts rangering`;
+    return li;
+  });
+  const more = d.dropped.length > DROPPED_SHOWN ? [makeNote(`… og ${d.dropped.length - DROPPED_SHOWN} mere`, "na")] : [];
+  return [note, ...shown, ...more];
 }
 
 function countBy(list, fn) {
@@ -215,7 +275,7 @@ function init() {
   initSettings(() => scheduleSearch(0));
   initTypes(selected);
   initMap();
-  initCases(CASES, () => scheduleSearch(0));
+  initCases(CASES, applyCase);
   initKommuneFilter($("kfilterBox"), params.get("k"), () => scheduleSearch());
 
   $("limit").addEventListener("change", () => scheduleSearch(0));

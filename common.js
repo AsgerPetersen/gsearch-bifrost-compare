@@ -111,12 +111,18 @@ function initKommuneFilter(container, initial, onChange) {
   document.addEventListener("click", (e) => info.open && !info.contains(e.target) && (info.open = false));
   kommuneInput = wrap.querySelector("input");
   kommuneInput.value = initial || "";
-  const validate = () => kommuneInput.classList.toggle("invalid", !kommuneValid(kommuneInput.value));
-  validate();
+  validateKommuner();
   kommuneInput.addEventListener("input", () => {
-    validate();
+    validateKommuner();
     onChange();
   });
+}
+
+const validateKommuner = () => kommuneInput.classList.toggle("invalid", !kommuneValid(kommuneInput.value));
+
+function setKommuner(v) {
+  kommuneInput.value = v || "";
+  validateKommuner();
 }
 
 const kommuneValid = (raw) => /^\s*(\d{3,4}(\s*[,; ]\s*\d{3,4})*)?\s*$/.test(raw);
@@ -199,15 +205,23 @@ function debouncer(fn, ms) {
   };
 }
 
+// A case is either a search string or a preset { q, hint?, title?, ... } passed on to onPick.
 function initCases(cases, onPick) {
   const box = $("cases");
   cases.forEach((c) => {
+    const ex = typeof c === "string" ? { q: c } : c;
     const b = document.createElement("button");
     b.type = "button";
-    b.textContent = c;
+    b.textContent = ex.q;
+    if (ex.hint) {
+      const h = document.createElement("small");
+      h.textContent = ex.hint;
+      b.appendChild(h);
+    }
+    if (ex.title) b.title = ex.title;
     b.addEventListener("click", () => {
-      $("q").value = c;
-      onPick();
+      $("q").value = ex.q;
+      onPick(ex);
     });
     box.appendChild(b);
   });

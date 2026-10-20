@@ -75,6 +75,11 @@ Uses the same settings and key handling as the plugin page.
 - Each type gets its own section, with GSearch on the left and Bifrost on the right.
 - Each type is one request per service. Bifrost `/search` calls run in parallel, so latency is per type.
 - The URL holds `?q=…&t=…&n=…&k=…`.
+- Examples are presets in `CASES` in `direct.js`: `{ q, t?, k?, n? }`.
+  - `q` is the search text and `t` the type keys. Omitting `t` selects all types.
+  - `k` holds the kommunekoder.
+  - `n` is the maximum per type. If omitted, the current value is kept.
+  - Example: `{ q: "1a", t: ["matrikel"], k: "615" }`.
 
 | Type | GSearch resource | Bifrost |
 |---|---|---|

@@ -104,3 +104,7 @@ details.info[open] > summary { background: #b01f20; }
   padding: 4px 14px; font-size: 13px; line-height: 1.45;
 }
 .infobox ul { padding-left: 18px; }
+#cases button small { margin-left: 5px; color: #667; font-size: 10px; }
+.list li.dropnote { margin-top: 6px; border-top: 1px dashed #bbb; padding-top: 6px; color: #8a5a00; font-style: normal; }
+.list li.dropped { opacity: .5; }
+.list li.dropped .text { text-decoration: line-through; font-weight: normal; }
