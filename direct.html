@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GSearch vs. Bifrost – direkte sammenligning</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <nav><a href="index.html">Pluginperspektiv</a> · <b>Direkte sammenligning</b></nav>
+  <h1>GSearch vs. Bifrost – direkte sammenligning</h1>
+  <p class="lead">
+    Søgeresultater fra
+    <a href="https://docs.dataforsyningen.dk/" target="_blank" rel="noopener">GSearch</a> og
+    <a href="https://bifrost.test42.dataforsyningen.dk/docs/da/" target="_blank" rel="noopener">Bifrost</a>
+    side om side, type for type, for alle typer de to tjenester understøtter.
+  </p>
+  <details id="settings">
+    <summary>Indstillinger og nøgler</summary>
+    <div class="settings-grid">
+      <label for="bfKey">Bifrost API-nøgle</label>
+      <input id="bfKey" type="password" autocomplete="off" placeholder="Påkrævet for Bifrost">
+      <label for="bfUrl">Bifrost URL</label>
+      <input id="bfUrl" type="url">
+      <label for="gsToken">GSearch token</label>
+      <input id="gsToken" type="text" autocomplete="off">
+      <label for="remember">Husk i browseren</label>
+      <span><input id="remember" type="checkbox"> <small>Gemmes kun i localStorage i din browser. Nøgler sendes aldrig andre steder hen end til de to tjenester.</small></span>
+    </div>
+  </details>
+</header>
+
+<main>
+  <section id="searchbar">
+    <input id="q" type="search" placeholder="Søg, fx “skodsb”, “3kg søll” eller “vendsyssel”" autofocus>
+    <div id="types"></div>
+    <div class="limitrow">
+      <label for="limit">Maks. resultater pr. type</label>
+      <input id="limit" type="number" min="1" max="100">
+      <span id="summary" class="meta"></span>
+    </div>
+    <div id="cases"><span>Eksempler:</span></div>
+  </section>
+
+  <section id="results" class="direct">
+    <div id="sections"></div>
+    <div class="col" id="mapCol">
+      <div id="map"></div>
+      <pre id="detail" class="detail">Klik på et resultat for at se geometri og rådata.</pre>
+    </div>
+  </section>
+
+  <section id="help">
+    <h2>Sådan læses siden</h2>
+    <ul>
+      <li>Hver valgt type får sin egen sektion med GSearch til venstre og Bifrost til højre. Hver type er ét kald pr. tjeneste.</li>
+      <li><b>GSearch</b> viser <code>visningstekst</code>. <b>Bifrost</b> viser <code>result</code>, med <code>components.type</code>,
+        livscyklus, confidence, score samt postnumre og kommuner fra <code>components</code> som grå mærker.</li>
+      <li>Bifrost <code>/resolve</code> kan ikke begrænses til en type. Det kaldes én gang (maks. 20 resultater), og resultaterne fordeles
+        efter <code>ref.kind</code>: <code>unit</code> under Adresse og <code>entrance</code> under Husnummer. Øvrige kinds nævnes nederst.</li>
+      <li><i>By</i> og <i>Ejerlav</i> findes kun i Bifrost. <i>Udgået matrikel</i> er Bifrost <code>ejendom</code> med <code>lifecycle: ["retired"]</code>.</li>
+      <li>Klik på et resultat for at se det på kortet (rød = GSearch, blå = Bifrost). Bifrost-geometri hentes først ved klik.</li>
+      <li>Søgningen kan deles via adresselinjen (<code>?q=…&amp;t=…&amp;n=…</code>). Nøgler kommer aldrig i URL'en.</li>
+    </ul>
+  </section>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/proj4@2.12.1/dist/proj4.js"></script>
+<script src="common.js"></script>
+<script src="direct.js"></script>
+</body>
+</html>

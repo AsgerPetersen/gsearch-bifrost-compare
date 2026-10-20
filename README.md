@@ -1,16 +1,21 @@
 # GSearch vs. Bifrost
 
-A static web page that shows search results from
+Static web pages that show search results from
 [GSearch](https://docs.dataforsyningen.dk/) and
-[Bifrost](https://bifrost.test42.dataforsyningen.dk/docs/da/) side by side, the way the
-QGIS plugin [Geosearch DK](https://github.com/AsgerPetersen/qgis-geosearch) would show them.
+[Bifrost](https://bifrost.test42.dataforsyningen.dk/docs/da/) side by side.
+
+- **Pluginperspektiv** (`index.html`): results as the QGIS plugin
+  [Geosearch DK](https://github.com/AsgerPetersen/qgis-geosearch) would show them.
+- **Direkte sammenligning** (`direct.html`): the two services compared type by type, for every type
+  either service supports, independently of the plugin.
 
 It was built while investigating the plugin's migration from GSearch (closing November 2026) to
 Bifrost.
 
-**Live:** https://asgerpetersen.github.io/gsearch-bifrost-compare/
+**Live:** https://asgerpetersen.github.io/gsearch-bifrost-compare/ and
+https://asgerpetersen.github.io/gsearch-bifrost-compare/direct.html
 
-## Usage
+## Plugin perspective (`index.html`)
 
 1. Open the page and enter your Bifrost API key under *Indstillinger og nøgler*.
    - The key is only sent to the Bifrost URL.
@@ -60,9 +65,50 @@ How each type is queried in Bifrost:
 
 All `/search` targets are sent in a single batch request.
 
+## Direct comparison (`direct.html`)
+
+Uses the same settings and key handling as the plugin page.
+
+- There is no prefix syntax and no plugin limit.
+  - Pick types with checkboxes (*Alle* / *Ingen*).
+  - Set *Maks. resultater pr. type* (1–100) to choose how many results each type returns.
+- Each type gets its own section, with GSearch on the left and Bifrost on the right.
+- Each type is one request per service. Bifrost `/search` calls run in parallel, so latency is per type.
+- The URL holds `?q=…&t=…&n=…`.
+
+| Type | GSearch resource | Bifrost |
+|---|---|---|
+| Adresse | adresse | `/resolve`, `ref.kind = unit` |
+| Husnummer | husnummer | `/resolve`, `ref.kind = entrance` |
+| Navngiven vej | navngivenvej | target `street` |
+| Postnummer | postnummer | target `postcode` |
+| By | – | target `city` |
+| Matrikel | matrikel | target `ejendom` |
+| Udgået matrikel | matrikel_udgaaet | target `ejendom`, `lifecycle: ["retired"]` |
+| Ejerlav | – | target `ejerlav` |
+| Stednavn | stednavn | target `stednavn` |
+| Kommune | kommune | target `kommune` |
+| Sogn | sogn | target `sogn` |
+| Region | region | target `region` |
+| Retskreds | retskreds | target `retskreds` |
+| Politikreds | politikreds | target `politikreds` |
+| Opstillingskreds | opstillingskreds | target `opstillingskreds` |
+
+`/resolve` cannot be restricted to a kind and returns at most 20 results.
+
+- It is called once, and its results are split by `ref.kind` into the Adresse and Husnummer sections.
+- Any other kinds it returns are listed as a note.
+
 ## Development
 
-The page is plain HTML, CSS and JavaScript with no build step. It uses Leaflet and proj4 from a CDN.
+The pages are plain HTML, CSS and JavaScript with no build step.
+
+| File | Contents |
+|---|---|
+| `common.js` | Shared settings, API calls, map and geometry handling |
+| `plugin.js` | Plugin-perspective page logic |
+| `direct.js` | Direct-comparison page logic |
+ It uses Leaflet and proj4 from a CDN.
 
 ```sh
 python3 -m http.server 8000

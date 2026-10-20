@@ -60,3 +60,29 @@ code { background: #eef0f3; padding: 0 3px; border-radius: 3px; }
 @media (max-width: 700px) {
   #results { grid-template-columns: 1fr; }
 }
+
+/* navigation */
+nav { margin-top: 12px; font-size: 13px; color: #555; }
+
+/* direct comparison page */
+#results.direct { grid-template-columns: 2fr 1fr; }
+.limitrow { margin-top: 8px; display: flex; gap: 8px; align-items: center; }
+.limitrow input { width: 70px; padding: 2px 4px; }
+#types .toggles button { font: inherit; font-size: 12px; padding: 1px 8px; cursor: pointer; }
+.tsec { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; margin-bottom: 12px; }
+.tsec h3 { margin: 0 0 6px; font-size: 15px; }
+.tsec h4 { margin: 0 0 4px; font-size: 13px; font-weight: 600; }
+.tsec h4 code { font-weight: normal; font-size: 11px; }
+.gsH { color: #b01f20; }
+.bfH { color: #1a5f94; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pair > div { min-width: 0; }
+.list li.na { color: #999; font-style: italic; cursor: default; list-style: none; }
+.list li.na:hover, .list li.error:hover { background: none; }
+
+@media (max-width: 1100px) {
+  #results.direct { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .pair { grid-template-columns: 1fr; }
+}
