@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GSearch vs. Bifrost</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>GSearch vs. Bifrost</h1>
+  <p class="lead">
+    Side-om-side sammenligning af søgeresultater fra
+    <a href="https://docs.dataforsyningen.dk/" target="_blank" rel="noopener">GSearch</a> og
+    <a href="https://bifrost.test42.dataforsyningen.dk/docs/da/" target="_blank" rel="noopener">Bifrost</a>,
+    som de ville blive vist i QGIS-pluginet
+    <a href="https://github.com/AsgerPetersen/qgis-geosearch" target="_blank" rel="noopener">Geosearch DK</a>.
+  </p>
+  <details id="settings">
+    <summary>Indstillinger og nøgler</summary>
+    <div class="settings-grid">
+      <label for="bfKey">Bifrost API-nøgle</label>
+      <input id="bfKey" type="password" autocomplete="off" placeholder="Påkrævet for Bifrost">
+      <label for="bfUrl">Bifrost URL</label>
+      <input id="bfUrl" type="url">
+      <label for="gsToken">GSearch token</label>
+      <input id="gsToken" type="text" autocomplete="off">
+      <label for="remember">Husk i browseren</label>
+      <span><input id="remember" type="checkbox"> <small>Gemmes kun i localStorage i din browser. Nøgler sendes aldrig andre steder hen end til de to tjenester.</small></span>
+    </div>
+  </details>
+</header>
+
+<main>
+  <section id="searchbar">
+    <input id="q" type="search" placeholder="Søg som i pluginet, fx “skodsb”, “3kg søll” eller “ste: vendsyssel”" autofocus>
+    <div id="types"></div>
+    <div id="cases"><span>Eksempler:</span></div>
+  </section>
+
+  <section id="results">
+    <div class="col" id="gsCol">
+      <h2>GSearch <span class="meta" id="gsMeta"></span></h2>
+      <ol id="gsList" class="list"></ol>
+    </div>
+    <div class="col" id="bfCol">
+      <h2>Bifrost <span class="meta" id="bfMeta"></span></h2>
+      <ol id="bfList" class="list"></ol>
+    </div>
+    <div class="col" id="mapCol">
+      <div id="map"></div>
+      <pre id="detail" class="detail">Klik på et resultat for at se geometri og rådata.</pre>
+    </div>
+  </section>
+
+  <section id="help">
+    <h2>Sådan læses siden</h2>
+    <ul>
+      <li><b>GSearch</b>-kolonnen viser <code>visningstekst</code> – præcis den tekst brugeren ser i pluginet i dag.
+        Pluginet kalder én ressource pr. valgt type med <code>limit = 40 / antal typer</code> og viser resultaterne i typernes rækkefølge.</li>
+      <li><b>Bifrost</b>-kolonnen viser <code>result</code> med fed – den tekst Bifrost leverer. Den grå linje er en tekst,
+        pluginet <i>kunne</i> sammensætte ud fra <code>components</code>, efterfulgt af <code>ref.kind</code>, confidence og score.</li>
+      <li>Adressetyperne bruger Bifrost <code>/resolve</code> (maks. 20 resultater, kan ikke begrænses til kun adresser).
+        Øvrige typer bruger <code>/search</code> med det tilsvarende <code>target</code> i ét batch-kald.</li>
+      <li>Præfiks som i pluginet: <code>adr:</code>, <code>ste:</code>, <code>pos:</code>, <code>mat:</code>, <code>kom:</code>,
+        <code>ops:</code>, <code>pol:</code>, <code>reg:</code> samt <code>enh:</code> (adresse), <code>vej:</code>, <code>sog:</code>,
+        <code>ret:</code> og <code>udg:</code> (udgåede matrikler).</li>
+      <li>Klik på et resultat for at se det på kortet (rød = GSearch, blå = Bifrost). Bifrost-geometri hentes først ved klik.</li>
+      <li>Søgningen kan deles via adresselinjen (<code>?q=…&amp;t=…</code>). Nøgler kommer aldrig i URL'en.</li>
+    </ul>
+  </section>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/proj4@2.12.1/dist/proj4.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
