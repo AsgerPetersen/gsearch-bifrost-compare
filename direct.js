@@ -195,11 +195,14 @@ function runSearch() {
       resolveTypes.forEach((t) => {
         const s = sections[t.key];
         if (d.error) return s.fill("bf", [makeNote(d.error, "error")], `${ms} ms`);
-        const mine = d.matches.filter((m) => m.ref.kind === t.bf.kind);
+        const mine = resolveFor(t, d.matches);
+        const used = new Set(mine.map((m) => m.src));
         const shown = mine.slice(0, limit);
-        const items = shown.map((m) => makeItem("bf", { ep: "resolve", row: m, text: m.result }, bfDirectTags(m)));
+        const items = shown.map((m) =>
+          makeItem("bf", { ep: "resolve", row: m, text: m.result }, [...(m.viaUnit ? ["unit = entrance"] : []), ...bfDirectTags(m)])
+        );
         if (!items.length) items.push(makeNote("Ingen resultater", "na"));
-        const others = countBy(d.matches.filter((m) => m.ref.kind !== t.bf.kind), (m) => m.ref.kind);
+        const others = countBy(d.matches.filter((m) => !used.has(m)), (m) => m.ref.kind);
         if (others) items.push(makeNote(`/resolve gav også: ${others}`, "na"));
         s.fill("bf", items, `${shown.length} · ${ms} ms · /resolve (${d.matches.length} i alt, maks. ${RESOLVE_MAX})${kTxt}`);
         tally("bf", shown.length, ms);
@@ -232,6 +235,19 @@ function countBy(list, fn) {
   const c = {};
   list.forEach((x) => (c[fn(x)] = (c[fn(x)] || 0) + 1));
   return Object.entries(c).map(([k, v]) => `${v} ${k}`).join(", ");
+}
+
+// A unit without floor/door is also its entrance (Bifrost then sets refs.entrance and returns
+// only the unit), so it counts as a husnummer hit as well.
+function resolveFor(t, matches) {
+  const seen = new Set();
+  return matches
+    .map((m) => {
+      if (m.ref.kind === t.bf.kind) return { ...m, src: m };
+      if (t.bf.kind === "entrance" && m.ref.kind === "unit" && m.refs && m.refs.entrance)
+        return { ...m, ref: { kind: "entrance", id: m.refs.entrance }, viaUnit: true, src: m };
+    })
+    .filter((m) => m && !seen.has(m.ref.id) && seen.add(m.ref.id));
 }
 
 function bfDirectTags(m) {

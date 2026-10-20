@@ -84,7 +84,7 @@ Uses the same settings and key handling as the plugin page.
 | Type | GSearch resource | Bifrost |
 |---|---|---|
 | Adresse | adresse | `/resolve`, `ref.kind = unit` |
-| Husnummer | husnummer | `/resolve`, `ref.kind = entrance` |
+| Husnummer | husnummer | `/resolve`, `ref.kind = entrance`, or `unit` with `refs.entrance` (see below) |
 | Navngiven vej | navngivenvej | target `street` |
 | Postnummer | postnummer | target `postcode` |
 | By | – | target `city` |
@@ -102,6 +102,8 @@ Uses the same settings and key handling as the plugin page.
 `/resolve` cannot be restricted to a kind and returns at most 20 results.
 
 - It is called once, and its results are split by `ref.kind` into the Adresse and Husnummer sections.
+- A house number with a single address and no floor or door (e.g. *Vangebovej 71*) comes back only as a
+  `unit` with `refs.entrance` set. It is also shown under Husnummer, tagged *unit = entrance*.
 - Any other kinds it returns are listed as a note.
 
 ## Kommune filter
