@@ -23,7 +23,6 @@ function initSettings(onChange) {
   $("bfKey").value = (remember && store.get("bfKey")) || DEFAULTS.bfKey;
   $("bfUrl").value = store.get("bfUrl") || DEFAULTS.bfUrl;
   $("gsToken").value = store.get("gsToken") || DEFAULTS.gsToken;
-  if (!$("bfKey").value) $("settings").open = true;
 
   const persist = () => {
     const r = $("remember").checked;
