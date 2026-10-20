@@ -3,6 +3,8 @@
 
 const DEFAULTS = {
   bfUrl: "https://bifrost.test42.dataforsyningen.dk",
+  // Public token issued for this comparison site.
+  bfKey: "lugcBskiaZLhizxRdugVauzMqsBChgiqBKhFOqWtLhfqJcUtZlbvOCaawVquiAGG",
   // Public default token bundled with the Geosearch DK QGIS plugin.
   gsToken: "0350b5341749c0970454474881173412",
 };
@@ -18,7 +20,7 @@ const store = {
 function initSettings(onChange) {
   const remember = store.get("remember") === "1";
   $("remember").checked = remember;
-  $("bfKey").value = (remember && store.get("bfKey")) || "";
+  $("bfKey").value = (remember && store.get("bfKey")) || DEFAULTS.bfKey;
   $("bfUrl").value = store.get("bfUrl") || DEFAULTS.bfUrl;
   $("gsToken").value = store.get("gsToken") || DEFAULTS.gsToken;
   if (!$("bfKey").value) $("settings").open = true;
@@ -39,7 +41,7 @@ function initSettings(onChange) {
 }
 
 const cfg = () => ({
-  bfKey: $("bfKey").value.trim(),
+  bfKey: $("bfKey").value.trim() || DEFAULTS.bfKey,
   bfUrl: ($("bfUrl").value.trim() || DEFAULTS.bfUrl).replace(/\/+$/, ""),
   gsToken: $("gsToken").value.trim() || DEFAULTS.gsToken,
 });

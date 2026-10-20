@@ -17,10 +17,10 @@ https://asgerpetersen.github.io/gsearch-bifrost-compare/direct.html
 
 ## Plugin perspective (`index.html`)
 
-1. Open the page and enter your Bifrost API key under *Indstillinger og nøgler*.
-   - The key is only sent to the Bifrost URL.
-   - It is only stored in the browser's `localStorage` if you tick *Husk i browseren*.
-   - GSearch uses the plugin's public default token unless you enter your own.
+1. Open the page. Both services work out of the box:
+   - Bifrost uses a public token issued for this site; GSearch uses the plugin's public default token.
+   - You can enter your own keys under *Indstillinger og nøgler*. They are only sent to the respective
+     service, and only stored in the browser's `localStorage` if you tick *Husk i browseren*.
 2. Type as you would in the plugin. Requests are debounced 500 ms, like in the plugin.
 3. Pick result types, or use the plugin's prefix syntax: `adr:`, `ste:`, `pos:`, `mat:`, `kom:`,
    `ops:`, `pol:` and `reg:`. These prefixes are also available here:
