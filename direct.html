@@ -40,6 +40,7 @@
     <div class="limitrow">
       <label for="limit">Maks. resultater pr. type</label>
       <input id="limit" type="number" min="1" max="100">
+      <span id="kfilterBox"></span>
       <span id="summary" class="meta"></span>
     </div>
     <div id="cases"><span>Eksempler:</span></div>
@@ -63,7 +64,8 @@
         efter <code>ref.kind</code>: <code>unit</code> under Adresse og <code>entrance</code> under Husnummer. Øvrige kinds nævnes nederst.</li>
       <li><i>By</i> og <i>Ejerlav</i> findes kun i Bifrost. <i>Udgået matrikel</i> er Bifrost <code>ejendom</code> med <code>lifecycle: ["retired"]</code>.</li>
       <li>Klik på et resultat for at se det på kortet (rød = GSearch, blå = Bifrost). Bifrost-geometri hentes først ved klik.</li>
-      <li>Søgningen kan deles via adresselinjen (<code>?q=…&amp;t=…&amp;n=…</code>). Nøgler kommer aldrig i URL'en.</li>
+      <li><i>Kommunekoder</i> (fx <code>230,101</code>) begrænser søgningen til kommunerne. Klik på <b>i</b> for at se, hvordan filteret er lavet i de to tjenester.</li>
+      <li>Søgningen kan deles via adresselinjen (<code>?q=…&amp;t=…&amp;n=…&amp;k=…</code>). Nøgler kommer aldrig i URL'en.</li>
     </ul>
   </section>
 </main>

@@ -71,6 +71,7 @@ function writeUrl(q) {
   if (q) p.set("q", q);
   p.set("t", selectedTypes().map((t) => t.key).join(","));
   p.set("n", getLimit());
+  if (kommuneInput.value.trim()) p.set("k", kommuneInput.value.trim());
   history.replaceState(null, "", "?" + p.toString());
 }
 
@@ -83,6 +84,8 @@ function runSearch() {
   writeUrl(term);
   const types = selectedTypes();
   const limit = getLimit();
+  const codes = kommuneCodes();
+  const kTxt = codes.length ? ` · kommune ${codes.join(", ")}` : "";
   const my = ++seq;
   const box = $("sections");
   box.innerHTML = "";
@@ -108,11 +111,11 @@ function runSearch() {
   types.forEach((t) => {
     const s = sections[t.key];
     if (!t.gs) return s.fill("gs", [makeNote("Typen findes ikke i GSearch", "na")], "");
-    timed(gsearch(t.gs, term, limit).catch((e) => ({ error: e.message }))).then(([d, ms]) => {
+    timed(gsearch(t.gs, term, limit, codes).catch((e) => ({ error: e.message }))).then(([d, ms]) => {
       if (my !== seq) return;
       if (d.error) return s.fill("gs", [makeNote(d.error, "error")], `${ms} ms`);
       const items = d.map((row) => makeItem("gs", { resource: t.gs, row, text: row.visningstekst }, gsTags(row)));
-      s.fill("gs", items.length ? items : [makeNote("Ingen resultater", "na")], `${d.length} · ${ms} ms`);
+      s.fill("gs", items.length ? items : [makeNote("Ingen resultater", "na")], `${d.length} · ${ms} ms${kTxt}`);
       tally("gs", d.length, ms);
     });
   });
@@ -124,19 +127,29 @@ function runSearch() {
   }
   types.filter((t) => t.bf.ep === "search").forEach((t) => {
     const s = sections[t.key];
-    const body = { input: term, target: t.bf.target, limit };
+    const body = { input: term, target: t.bf.target, limit: codes.length ? BF_OVERFETCH : limit };
     if (t.bf.lifecycle) body.lifecycle = t.bf.lifecycle;
-    timed(bifrost("search", body).catch((e) => ({ error: e.message }))).then(([d, ms]) => {
+    const job = async () => {
+      const [d, pred] = await Promise.all([
+        bifrost("search", body),
+        codes.length ? bfKommunePredicate(t.bf.target, codes) : null,
+      ]);
+      if (!pred) return { matches: d.matches, meta: "" };
+      const kept = d.matches.filter(pred);
+      return { matches: kept.slice(0, limit), meta: ` · ${kept.length} af ${d.matches.length} i kommune${codes.length > 1 ? "rne" : "n"}` };
+    };
+    timed(job().catch((e) => ({ error: e.message }))).then(([d, ms]) => {
       if (my !== seq) return;
       if (d.error) return s.fill("bf", [makeNote(d.error, "error")], `${ms} ms`);
       const items = d.matches.map((m) => makeItem("bf", { ep: "search", row: m, text: m.result }, bfDirectTags(m)));
-      s.fill("bf", items.length ? items : [makeNote("Ingen resultater", "na")], `${d.matches.length} · ${ms} ms`);
+      s.fill("bf", items.length ? items : [makeNote("Ingen resultater", "na")], `${d.matches.length} · ${ms} ms${d.meta}`);
       tally("bf", d.matches.length, ms);
     });
   });
   const resolveTypes = types.filter((t) => t.bf.ep === "resolve");
   if (resolveTypes.length) {
-    timed(bifrost("resolve", { input: term, limit: RESOLVE_MAX }).catch((e) => ({ error: e.message }))).then(([d, ms]) => {
+    const job = bfResolve(term, RESOLVE_MAX, codes).then((matches) => ({ matches }));
+    timed(job.catch((e) => ({ error: e.message }))).then(([d, ms]) => {
       if (my !== seq) return;
       resolveTypes.forEach((t) => {
         const s = sections[t.key];
@@ -147,7 +160,7 @@ function runSearch() {
         if (!items.length) items.push(makeNote("Ingen resultater", "na"));
         const others = countBy(d.matches.filter((m) => m.ref.kind !== t.bf.kind), (m) => m.ref.kind);
         if (others) items.push(makeNote(`/resolve gav også: ${others}`, "na"));
-        s.fill("bf", items, `${shown.length} · ${ms} ms · /resolve (${d.matches.length} i alt, maks. ${RESOLVE_MAX})`);
+        s.fill("bf", items, `${shown.length} · ${ms} ms · /resolve (${d.matches.length} i alt, maks. ${RESOLVE_MAX})${kTxt}`);
         tally("bf", shown.length, ms);
       });
     });
@@ -203,6 +216,7 @@ function init() {
   initTypes(selected);
   initMap();
   initCases(CASES, () => scheduleSearch(0));
+  initKommuneFilter($("kfilterBox"), params.get("k"), () => scheduleSearch());
 
   $("limit").addEventListener("change", () => scheduleSearch(0));
   const q = $("q");

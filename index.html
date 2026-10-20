@@ -38,6 +38,7 @@
   <section id="searchbar">
     <input id="q" type="search" placeholder="Søg som i pluginet, fx “skodsb”, “3kg søll” eller “ste: vendsyssel”" autofocus>
     <div id="types"></div>
+    <div class="limitrow" id="kfilterBox"></div>
     <div id="cases"><span>Eksempler:</span></div>
   </section>
 
@@ -69,7 +70,9 @@
         <code>ops:</code>, <code>pol:</code>, <code>reg:</code> samt <code>enh:</code> (adresse), <code>vej:</code>, <code>sog:</code>,
         <code>ret:</code> og <code>udg:</code> (udgåede matrikler).</li>
       <li>Klik på et resultat for at se det på kortet (rød = GSearch, blå = Bifrost). Bifrost-geometri hentes først ved klik.</li>
-      <li>Søgningen kan deles via adresselinjen (<code>?q=…&amp;t=…</code>). Nøgler kommer aldrig i URL'en.</li>
+      <li><i>Kommunekoder</i> svarer til pluginets indstilling “Søg kun i listede kommuner” (fx <code>230,101</code>).
+        Klik på <b>i</b> for at se, hvordan filteret er lavet i de to tjenester.</li>
+      <li>Søgningen kan deles via adresselinjen (<code>?q=…&amp;t=…&amp;k=…</code>). Nøgler kommer aldrig i URL'en.</li>
     </ul>
   </section>
 </main>

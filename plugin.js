@@ -55,6 +55,7 @@ function writeUrl(q) {
   const p = new URLSearchParams();
   if (q) p.set("q", q);
   p.set("t", selectedKeys().join(","));
+  if (kommuneInput.value.trim()) p.set("k", kommuneInput.value.trim());
   history.replaceState(null, "", "?" + p.toString());
 }
 
@@ -91,17 +92,18 @@ async function runSearch() {
   const limit = Math.floor(PLUGIN_MAX_TOTAL / keys.length);
   $("gsMeta").textContent = "søger…";
   $("bfMeta").textContent = "søger…";
-  searchGSearch(keys, term, limit).then((r) => my === seq && renderList("gs", r.rows, r.meta));
-  searchBifrost(keys, term, limit).then((r) => my === seq && renderList("bf", r.rows, r.meta));
+  const codes = kommuneCodes();
+  searchGSearch(keys, term, limit, codes).then((r) => my === seq && renderList("gs", r.rows, r.meta));
+  searchBifrost(keys, term, limit, codes).then((r) => my === seq && renderList("bf", r.rows, r.meta));
 }
 
-async function searchGSearch(keys, term, limit) {
+async function searchGSearch(keys, term, limit, codes) {
   const [parts, ms] = await timed(
     Promise.all(
       keys.map(async (k) => {
         const t = TYPE_BY_KEY[k];
         try {
-          const data = await gsearch(t.gs, term, limit);
+          const data = await gsearch(t.gs, term, limit, codes);
           return data.map((row) => ({ type: t, resource: t.gs, row, text: row.visningstekst }));
         } catch (e) {
           return [{ type: t, error: `${t.title} - Der skete en fejl (${e.message})` }];
@@ -110,34 +112,41 @@ async function searchGSearch(keys, term, limit) {
     )
   );
   const rows = parts.flat();
-  return { rows, meta: `${rows.filter((r) => !r.error).length} resultater · ${ms} ms · limit ${limit}/type` };
+  const kTxt = codes.length ? ` · filter ${gsKommuneFilter(codes)}` : "";
+  return { rows, meta: `${rows.filter((r) => !r.error).length} resultater · ${ms} ms · limit ${limit}/type${kTxt}` };
 }
 
-async function searchBifrost(keys, term, limit) {
+async function searchBifrost(keys, term, limit, codes) {
   if (!cfg().bfKey) return { rows: [{ error: NO_KEY }], meta: "" };
   const types = keys.map((k) => TYPE_BY_KEY[k]);
   const addrTypes = types.filter((t) => t.bf.ep === "resolve");
   const searchTypes = types.filter((t) => t.bf.ep === "search");
   const notes = [];
   if (addrTypes.length && limit * addrTypes.length > 20) notes.push("resolve maks. 20");
+  if (codes.length) notes.push(`kommune ${codes.join(", ")}: search hentet ${BF_OVERFETCH}/type og filtreret i browseren`);
 
   const jobs = [];
   if (addrTypes.length) {
     jobs.push(
-      bifrost("resolve", { input: term, limit: Math.min(20, limit * addrTypes.length) })
-        .then((d) => ({ resolve: d.matches }))
+      bfResolve(term, Math.min(20, limit * addrTypes.length), codes)
+        .then((matches) => ({ resolve: matches }))
         .catch((e) => ({ resolveError: e.message }))
     );
   }
   if (searchTypes.length) {
     const batch = searchTypes.map((t) => {
-      const b = { input: term, target: t.bf.target, limit };
+      const b = { input: term, target: t.bf.target, limit: codes.length ? BF_OVERFETCH : limit };
       if (t.bf.lifecycle) b.lifecycle = t.bf.lifecycle;
       return b;
     });
     jobs.push(
-      bifrost("search", batch)
-        .then((d) => ({ search: d.map((x) => x.matches) }))
+      Promise.all([
+        bifrost("search", batch),
+        Promise.all(searchTypes.map((t) => (codes.length ? bfKommunePredicate(t.bf.target, codes) : null))),
+      ])
+        .then(([d, preds]) => ({
+          search: d.map((x, i) => (preds[i] ? x.matches.filter(preds[i]).slice(0, limit) : x.matches)),
+        }))
         .catch((e) => ({ searchError: e.message }))
     );
   }
@@ -227,6 +236,7 @@ function init() {
   initTypes(selected);
   initMap();
   initCases(CASES, () => scheduleSearch(0));
+  initKommuneFilter($("kfilterBox"), params.get("k"), () => scheduleSearch());
 
   const q = $("q");
   q.value = params.get("q") || "";

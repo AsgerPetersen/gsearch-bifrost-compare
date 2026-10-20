@@ -86,3 +86,21 @@ nav { margin-top: 12px; font-size: 13px; color: #555; }
 @media (max-width: 700px) {
   .pair { grid-template-columns: 1fr; }
 }
+
+/* kommune filter + (i) explanation */
+.kfilter { display: inline-flex; gap: 6px; align-items: center; position: relative; }
+.kfilter input { width: 130px; padding: 2px 4px; }
+.kfilter input.invalid { border-color: #d62728; background: #fff3f3; }
+details.info { display: inline-block; }
+details.info > summary {
+  list-style: none; cursor: pointer; width: 18px; height: 18px; line-height: 18px; text-align: center;
+  border-radius: 50%; background: #1a5f94; color: #fff; font: italic bold 12px Georgia, serif;
+}
+details.info > summary::-webkit-details-marker { display: none; }
+details.info[open] > summary { background: #b01f20; }
+.infobox {
+  position: absolute; z-index: 1000; left: 0; top: 26px; width: min(560px, 85vw);
+  background: #fff; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,.15);
+  padding: 4px 14px; font-size: 13px; line-height: 1.45;
+}
+.infobox ul { padding-left: 18px; }
