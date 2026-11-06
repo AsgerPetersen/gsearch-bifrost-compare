@@ -34,7 +34,7 @@ const CASES = [
   { q: "nørrebrog 1", t: ["adresse", "husnummer", "navngivenvej"] },
   { q: "vestergade 1", t: ["adresse", "husnummer"], k: "101" },
   { q: "Vangebovej 71", t: ["husnummer"] },
-  { q: "rådhuspl" },
+  { q: "nørrebrog" },
   { q: "rådhuspladsen", t: ["stednavn", "navngivenvej"] },
   { q: "vendsyssel", t: ["stednavn"] },
   { q: "skodsborg", t: ["stednavn", "by", "postnummer"] },

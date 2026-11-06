@@ -24,7 +24,7 @@ const TYPES = [
 const TYPE_BY_KEY = Object.fromEntries(TYPES.map((t) => [t.key, t]));
 
 const CASES = [
-  "skodsb", "skodsborgvej 41", "skodsborgvej 414", "nøddebogade 1 st th", "nørrebrog 1", "rådhuspl",
+  "skodsb", "skodsborgvej 41", "skodsborgvej 414", "nøddebogade 1 st th", "nørrebrog 1", "nørrebrog",
   "ste: rådhuspladsen", "ste: vendsyssel", "ste: skodsborg", "mat: 3kg søll", "mat: 3kg",
   "pos: 80", "pos: aar", "kom: køb", "ops: aar", "udg: 1an gentofte",
 ];
